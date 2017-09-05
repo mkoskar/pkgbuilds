@@ -1,0 +1,10 @@
+# shellcheck disable=SC2034
+# vim: ft=sh
+
+alts shaman-git shaman
+alts sxiv-git sxiv
+
+pargs curl/away http://cdn-fastly.deb.debian.org/debian/pool/main/a/away regex1 -o1 '"(away_.*\.tar\.gz)"'
+pargs curl/canon-pixma-mx920-complete 'https://www.canon.co.uk/supportproduct/gettabcontent/?type=drivers&os=Linux%20(64-bit)&productTcmUri=tcm:14-1019656' regex -o2 -o4 '(>MX920 series IJ Printer Driver Ver. ([\d.]+) for Linux \(debian)|(>MX920 series ScanGear MP Ver. ([\d.]+) for Linux \(debian)'
+pargs curl/spring-boot-cli 'https://search.maven.org/solrsearch/select?q=g%3A"org.springframework.boot"%20AND%20a%3A"spring-boot-cli"' json '.response.docs[0].latestVersion'
+pargs git-tag/shaman https://github.com/HalosGhost/shaman

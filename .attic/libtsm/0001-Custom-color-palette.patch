@@ -1,0 +1,55 @@
+Subject: [PATCH] Custom color palette
+Maintainer: Miroslav Koškár <http://mkoskar.com/>
+Version: v1
+
+---
+ src/tsm_vte.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/src/tsm_vte.c b/src/tsm_vte.c
+index 70d34d9..716cda5 100644
+--- a/src/tsm_vte.c
++++ b/src/tsm_vte.c
+@@ -206,24 +206,24 @@ enum vte_color {
+ };
+ 
+ static uint8_t color_palette[COLOR_NUM][3] = {
+-	[COLOR_BLACK]         = {   0,   0,   0 }, /* black */
+-	[COLOR_RED]           = { 205,   0,   0 }, /* red */
+-	[COLOR_GREEN]         = {   0, 205,   0 }, /* green */
+-	[COLOR_YELLOW]        = { 205, 205,   0 }, /* yellow */
+-	[COLOR_BLUE]          = {   0,   0, 238 }, /* blue */
+-	[COLOR_MAGENTA]       = { 205,   0, 205 }, /* magenta */
+-	[COLOR_CYAN]          = {   0, 205, 205 }, /* cyan */
+-	[COLOR_LIGHT_GREY]    = { 229, 229, 229 }, /* light grey */
+-	[COLOR_DARK_GREY]     = { 127, 127, 127 }, /* dark grey */
+-	[COLOR_LIGHT_RED]     = { 255,   0,   0 }, /* light red */
+-	[COLOR_LIGHT_GREEN]   = {   0, 255,   0 }, /* light green */
+-	[COLOR_LIGHT_YELLOW]  = { 255, 255,   0 }, /* light yellow */
+-	[COLOR_LIGHT_BLUE]    = {  92,  92, 255 }, /* light blue */
+-	[COLOR_LIGHT_MAGENTA] = { 255,   0, 255 }, /* light magenta */
+-	[COLOR_LIGHT_CYAN]    = {   0, 255, 255 }, /* light cyan */
+-	[COLOR_WHITE]         = { 255, 255, 255 }, /* white */
+-
+-	[COLOR_FOREGROUND]    = { 229, 229, 229 }, /* light grey */
++	[COLOR_BLACK]         = {   5,   5,   5 }, /* black */
++	[COLOR_RED]           = { 157,  45,  45 }, /* red */
++	[COLOR_GREEN]         = {  69, 163,  69 }, /* green */
++	[COLOR_YELLOW]        = { 219, 156,  46 }, /* yellow */
++	[COLOR_BLUE]          = {  56,  69, 128 }, /* blue */
++	[COLOR_MAGENTA]       = { 164,  63, 164 }, /* magenta */
++	[COLOR_CYAN]          = {  34, 159, 159 }, /* cyan */
++	[COLOR_LIGHT_GREY]    = { 174, 174, 174 }, /* light grey */
++	[COLOR_DARK_GREY]     = {  77,  77,  77 }, /* dark grey */
++	[COLOR_LIGHT_RED]     = { 192,  79,  79 }, /* light red */
++	[COLOR_LIGHT_GREEN]   = { 112, 192, 102 }, /* light green */
++	[COLOR_LIGHT_YELLOW]  = { 212, 198, 104 }, /* light yellow */
++	[COLOR_LIGHT_BLUE]    = {  96, 108, 181 }, /* light blue */
++	[COLOR_LIGHT_MAGENTA] = { 190,  99, 190 }, /* light magenta */
++	[COLOR_LIGHT_CYAN]    = { 104, 187, 187 }, /* light cyan */
++	[COLOR_WHITE]         = { 221, 221, 221 }, /* white */
++
++	[COLOR_FOREGROUND]    = { 174, 174, 174 }, /* light grey */
+ 	[COLOR_BACKGROUND]    = {   0,   0,   0 }, /* black */
+ };
+ 

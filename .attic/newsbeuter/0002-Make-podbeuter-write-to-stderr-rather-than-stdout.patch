@@ -1,0 +1,104 @@
+Subject: [PATCH] Make podbeuter write to stderr rather than stdout
+Maintainer: Miroslav Koškár <http://mkoskar.com/>
+Version: v2
+
+---
+ src/pb_controller.cpp | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/src/pb_controller.cpp b/src/pb_controller.cpp
+index 09b5e89..e20bd09 100644
+--- a/src/pb_controller.cpp
++++ b/src/pb_controller.cpp
+@@ -75,11 +75,11 @@ bool pb_controller::setup_dirs_xdg(const char *env_home) {
+ 	xdg_data_dir.append(NEWSBEUTER_SUBDIR_XDG);
+
+ 	if (access(xdg_config_dir.c_str(), R_OK | X_OK) != 0) {
+-		std::cout << utils::strprintf(_("XDG: configuration directory '%s' not accessible, using '%s' instead."), xdg_config_dir.c_str(), config_dir.c_str()) << std::endl;
++		std::cerr << utils::strprintf(_("XDG: configuration directory '%s' not accessible, using '%s' instead."), xdg_config_dir.c_str(), config_dir.c_str()) << std::endl;
+ 		return false;
+ 	}
+ 	if (access(xdg_data_dir.c_str(), R_OK | X_OK | W_OK) != 0) {
+-		std::cout << utils::strprintf(_("XDG: data directory '%s' not accessible, using '%s' instead."), xdg_data_dir.c_str(), config_dir.c_str()) << std::endl;
++		std::cerr << utils::strprintf(_("XDG: data directory '%s' not accessible, using '%s' instead."), xdg_data_dir.c_str(), config_dir.c_str()) << std::endl;
+ 		return false;
+ 	}
+
+@@ -106,8 +106,8 @@ pb_controller::pb_controller() : v(0), config_file("config"), queue_file("queue"
+ 		if (spw) {
+ 			cfgdir = spw->pw_dir;
+ 		} else {
+-			std::cout << _("Fatal error: couldn't determine home directory!") << std::endl;
+-			std::cout << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
++			std::cerr << _("Fatal error: couldn't determine home directory!") << std::endl;
++			std::cerr << utils::strprintf(_("Please set the HOME environment variable or add a valid user for UID %u!"), ::getuid()) << std::endl;
+ 			::exit(EXIT_FAILURE);
+ 		}
+ 	}
+@@ -166,21 +166,21 @@ void pb_controller::run(int argc, char * argv[]) {
+ 			usage(argv[0]);
+ 			break;
+ 		default:
+-			std::cout << utils::strprintf(_("%s: unknown option - %c"), argv[0], static_cast<char>(c)) << std::endl;
++			std::cerr << utils::strprintf(_("%s: unknown option - %c"), argv[0], static_cast<char>(c)) << std::endl;
+ 			usage(argv[0]);
+ 			break;
+ 		}
+ 	} while (c != -1);
+
+-	std::cout << utils::strprintf(_("Starting %s %s..."), "podbeuter", PROGRAM_VERSION) << std::endl;
++	std::cerr << utils::strprintf(_("Starting %s %s..."), "podbeuter", PROGRAM_VERSION) << std::endl;
+
+ 	pid_t pid;
+ 	if (!utils::try_fs_lock(lock_file, pid)) {
+-		std::cout << utils::strprintf(_("Error: an instance of %s is already running (PID: %u)"), "podbeuter", pid) << std::endl;
++		std::cerr << utils::strprintf(_("Error: an instance of %s is already running (PID: %u)"), "podbeuter", pid) << std::endl;
+ 		return;
+ 	}
+
+-	std::cout << _("Loading configuration...");
++	std::cerr << _("Loading configuration...");
+ 	std::cout.flush();
+
+ 	configparser cfgparser;
+@@ -206,7 +206,7 @@ void pb_controller::run(int argc, char * argv[]) {
+ 		cfgparser.parse("/etc/newsbeuter/config");
+ 		cfgparser.parse(config_file);
+ 	} catch (const configexception& ex) {
+-		std::cout << ex.what() << std::endl;
++		std::cerr << ex.what() << std::endl;
+ 		delete colorman;
+ 		return;
+ 	}
+@@ -217,7 +217,7 @@ void pb_controller::run(int argc, char * argv[]) {
+
+ 	max_dls = cfg->get_configvalue_as_int("max-downloads");
+
+-	std::cout << _("done.") << std::endl;
++	std::cerr << _("done.") << std::endl;
+
+ 	ql = new queueloader(queue_file, this);
+ 	ql->reload(downloads_);
+@@ -228,19 +228,19 @@ void pb_controller::run(int argc, char * argv[]) {
+
+ 	stfl::reset();
+
+-	std::cout <<  _("Cleaning up queue...");
++	std::cerr <<  _("Cleaning up queue...");
+ 	std::cout.flush();
+
+ 	ql->reload(downloads_);
+ 	delete ql;
+
+-	std::cout << _("done.") << std::endl;
++	std::cerr << _("done.") << std::endl;
+
+ 	utils::remove_fs_lock(lock_file);
+ }
+
+ void pb_controller::usage(const char * argv0) {
+-	std::cout << utils::strprintf(_("%s %s\nusage %s [-C <file>] [-q <file>] [-h]\n"
++	std::cerr << utils::strprintf(_("%s %s\nusage %s [-C <file>] [-q <file>] [-h]\n"
+ 	                                "-C <configfile> read configuration from <configfile>\n"
+ 	                                "-q <queuefile>  use <queuefile> as queue file\n"
+ 	                                "-a              start download on startup\n"

@@ -1,0 +1,23 @@
+# shellcheck disable=SC2034
+# vim: ft=sh
+
+# BASEDIR is directory where .pbmrc is located in (PWD or ../).
+
+# Sourced by pbm in following order:
+#
+#   $BASEDIR/.pbmrc
+#   ~/.config/pbmrc
+
+# CARCH=$(uname -m)
+# DBNAME=${BASEDIR##*/}
+# REPOSDIR="$HOME/packages"
+# CACHEDIR="$HOME/.cache/pbm"
+# CHROOTDIR="$CACHEDIR/chroot/$CARCH"
+
+# GIT_EMAIL=
+# GIT_NAME=
+
+# dbdeps=()
+# alts pkgbase [alt]...
+# probes pkgbase [pid]...
+# pargs pid [arg]...

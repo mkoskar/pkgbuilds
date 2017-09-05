@@ -1,0 +1,268 @@
+Subject: [PATCH] sidebar: Separate selection from active mailbox
+Maintainer: Miroslav Koškár <http://mkoskar.com/>
+Version: v1
+
+Requirements:
+
+* mutt 1.5.23 (https://bitbucket.org/mutt/mutt/downloads/mutt-1.5.23.tar.gz)
+* sidebar patch (http://lunar-linux.org/~tchan/mutt/patch-1.5.23.sidebar.20140412.txt)
+
+-- 8< --
+
+Improve sidebar by separating selection from currently active mailbox.
+Extend ``sidebar_format`` with ``%C`` sequence which will be replaced
+by ``*`` if mailbox is the currently active one, or `` `` otherwise.
+
+---
+ curs_main.c |  6 ++----
+ globals.h   |  1 -
+ protos.h    |  2 ++
+ sidebar.c   | 57 +++++++++++++++++++++++++++++++++++----------------------
+ sidebar.h   |  7 +------
+ 5 files changed, 40 insertions(+), 33 deletions(-)
+
+diff --git a/curs_main.c b/curs_main.c
+index 3889e56..21dd8f4 100644
+--- a/curs_main.c
++++ b/curs_main.c
+@@ -1120,9 +1120,7 @@ int mutt_index_menu (void)
+ 	  mutt_buffy (buf, sizeof (buf));
+ 
+           if ( op == OP_SIDEBAR_OPEN ) {
+-              if(!CurBuffy)
+-                break;
+-            strncpy( buf, CurBuffy->path, sizeof(buf) );  
++            get_selbuffypath( buf, sizeof(buf));
+ 	    } else if (mutt_enter_fname (cp, buf, sizeof (buf), &menu->redraw, 1) == -1)
+ 	  {
+ 	    if (menu->menu == MENU_PAGER)
+@@ -1141,13 +1139,13 @@ int mutt_index_menu (void)
+ 	}
+ 
+ 	mutt_expand_path (buf, sizeof (buf));
+-        set_curbuffy(buf);
+ 	if (mx_get_magic (buf) <= 0)
+ 	{
+ 	  mutt_error (_("%s is not a mailbox."), buf);
+ 	  break;
+ 	}
+ 	mutt_str_replace (&CurrentFolder, buf);
++	set_curbuffy(buf);
+ 
+ 	/* keepalive failure in mutt_enter_fname may kill connection. #3028 */
+ 	if (Context && !Context->path)
+diff --git a/globals.h b/globals.h
+index e26bad6..c7470b3 100644
+--- a/globals.h
++++ b/globals.h
+@@ -211,7 +211,6 @@ WHERE short ScoreThresholdDelete;
+ WHERE short ScoreThresholdRead;
+ WHERE short ScoreThresholdFlag;
+ 
+-WHERE struct buffy_t *CurBuffy INITVAL(0);
+ WHERE short DrawFullLine INITVAL(0);
+ WHERE short SidebarWidth;
+ #ifdef USE_IMAP
+diff --git a/protos.h b/protos.h
+index ce6ffd7..470107b 100644
+--- a/protos.h
++++ b/protos.h
+@@ -22,6 +22,7 @@
+ #endif
+ 
+ #include "mbyte.h"
++#include <stdbool.h>
+ 
+ #define MoreArgs(p) (*p->dptr && *p->dptr != ';' && *p->dptr != '#')
+ 
+@@ -41,6 +42,7 @@ struct sidebar_entry {
+     unsigned int        size;
+     unsigned int        new;
+     unsigned int        flagged;
++    bool                curr;
+ };
+ 
+ void mutt_make_string_info (char *, size_t, const char *, struct hdr_format_info *, format_flag);
+diff --git a/sidebar.c b/sidebar.c
+index 52c72e7..56629b2 100644
+--- a/sidebar.c
++++ b/sidebar.c
+@@ -31,7 +31,8 @@
+ #include "keymap.h"
+ #include <stdbool.h>
+ 
+-/*BUFFY *CurBuffy = 0;*/
++static BUFFY *CurBuffy = 0;
++static BUFFY *SelBuffy = 0;
+ static BUFFY *TopBuffy = 0;
+ static BUFFY *BottomBuffy = 0;
+ static int known_lines = 0;
+@@ -56,15 +57,15 @@ void calc_boundaries() {
+ 		while ( --count && BottomBuffy->next )
+ 			BottomBuffy = BottomBuffy->next;
+ 	}
+-	else if ( TopBuffy == CurBuffy->next ) {
+-		BottomBuffy = CurBuffy;
++	else if ( TopBuffy == SelBuffy->next ) {
++		BottomBuffy = SelBuffy;
+ 		tmp = BottomBuffy;
+ 		while ( --count && tmp->prev)
+ 			tmp = tmp->prev;
+ 		TopBuffy = tmp;
+ 	}
+-	else if ( BottomBuffy == CurBuffy->prev ) {
+-		TopBuffy = CurBuffy;
++	else if ( BottomBuffy == SelBuffy->prev ) {
++		TopBuffy = SelBuffy;
+ 		tmp = TopBuffy;
+ 		while ( --count && tmp->next )
+ 			tmp = tmp->next;
+@@ -128,6 +129,10 @@ switch(op) {
+ 		}
+ 		break;
+ 
++	case 'C':
++		mutt_format_s(dest, destlen, prefix, sbe->curr ? "*" : " ");
++		break;
++
+ 	case 'B':
+ 		mutt_format_s(dest, destlen, prefix, sbe->box);
+ 		break;
+@@ -141,7 +146,7 @@ switch(op) {
+ 	return (src);
+ }
+ 
+-char *make_sidebar_entry(char *box, unsigned int size, unsigned int new, unsigned int flagged) {
++char *make_sidebar_entry(char *box, unsigned int size, unsigned int new, unsigned int flagged, bool curr) {
+     static char *entry = 0;
+     struct sidebar_entry sbe;
+     int SBvisual;
+@@ -153,6 +158,7 @@ char *make_sidebar_entry(char *box, unsigned int size, unsigned int new, unsigne
+     sbe.new = new;
+     sbe.flagged = flagged;
+     sbe.size = size;
++    sbe.curr = curr;
+     strncpy(sbe.box, box, 31);
+ 
+     safe_realloc(&entry, SBvisual + 2);
+@@ -165,14 +171,15 @@ char *make_sidebar_entry(char *box, unsigned int size, unsigned int new, unsigne
+ 
+ void set_curbuffy(char buf[LONG_STRING])
+ {
+-  BUFFY* tmp = CurBuffy = Incoming;
++  BUFFY* tmp = Incoming;
++  CurBuffy = 0;
+ 
+   if (!Incoming)
+     return;
+ 
+   while(1) {
+     if(!strcmp(tmp->path, buf) || !strcmp(tmp->realpath, buf)) {
+-      CurBuffy = tmp;
++      CurBuffy = SelBuffy = tmp;
+       break;
+     }
+ 
+@@ -183,6 +190,12 @@ void set_curbuffy(char buf[LONG_STRING])
+   }
+ }
+ 
++void get_selbuffypath(char* dest, size_t n)
++{
++  if ( SelBuffy == 0 ) SelBuffy = Incoming;
++  strncpy (dest, SelBuffy->path, n);
++}
++
+ int draw_sidebar(int menu) {
+ 
+ 	BUFFY *tmp;
+@@ -279,14 +292,14 @@ int draw_sidebar(int menu) {
+ 
+ 	if ( known_lines != LINES || TopBuffy == 0 || BottomBuffy == 0 ) 
+ 		calc_boundaries(menu);
+-	if ( CurBuffy == 0 ) CurBuffy = Incoming;
++	if ( SelBuffy == 0 ) SelBuffy = Incoming;
+ 
+ 	tmp = TopBuffy;
+ 
+ 	SETCOLOR(MT_COLOR_NORMAL);
+ 
+ 	for ( ; tmp && lines < SidebarHeight; tmp = tmp->next ) {
+-		if ( tmp == CurBuffy )
++		if ( tmp == SelBuffy )
+ 			SETCOLOR(MT_COLOR_INDICATOR);
+ 		else if ( tmp->msg_unread > 0 )
+ 			SETCOLOR(MT_COLOR_NEW);
+@@ -337,7 +350,7 @@ int draw_sidebar(int menu) {
+ 		}
+ 		printw( "%.*s", SidebarWidth - delim_len + 1,
+ 			make_sidebar_entry(sidebar_folder_name, tmp->msgcount,
+-			tmp->msg_unread, tmp->msg_flagged));
++			tmp->msg_unread, tmp->msg_flagged, tmp == CurBuffy));
+ 		if (sidebar_folder_depth > 0)
+ 		        free(sidebar_folder_name);
+ 		lines++;
+@@ -371,29 +384,29 @@ void set_buffystats(CONTEXT* Context)
+ void scroll_sidebar(int op, int menu)
+ {
+         if(!SidebarWidth) return;
+-        if(!CurBuffy) return;
++        if(!SelBuffy) return;
+ 
+ 	switch (op) {
+ 		case OP_SIDEBAR_NEXT:
+-			if ( CurBuffy->next == NULL ) return;
+-			CurBuffy = CurBuffy->next;
++			if ( SelBuffy->next == NULL ) return;
++			SelBuffy = SelBuffy->next;
+ 			break;
+ 		case OP_SIDEBAR_PREV:
+-			if ( CurBuffy->prev == NULL ) return;
+-			CurBuffy = CurBuffy->prev;
++			if ( SelBuffy->prev == NULL ) return;
++			SelBuffy = SelBuffy->prev;
+ 			break;
+ 		case OP_SIDEBAR_SCROLL_UP:
+-			CurBuffy = TopBuffy;
+-			if ( CurBuffy != Incoming ) {
++			SelBuffy = TopBuffy;
++			if ( SelBuffy != Incoming ) {
+ 				calc_boundaries(menu);
+-				CurBuffy = CurBuffy->prev;
++				SelBuffy = SelBuffy->prev;
+ 			}
+ 			break;
+ 		case OP_SIDEBAR_SCROLL_DOWN:
+-			CurBuffy = BottomBuffy;
+-			if ( CurBuffy->next ) {
++			SelBuffy = BottomBuffy;
++			if ( SelBuffy->next ) {
+ 				calc_boundaries(menu);
+-				CurBuffy = CurBuffy->next;
++				SelBuffy = SelBuffy->next;
+ 			}
+ 			break;
+ 		default:
+diff --git a/sidebar.h b/sidebar.h
+index d195f11..9a0ced8 100644
+--- a/sidebar.h
++++ b/sidebar.h
+@@ -20,17 +20,12 @@
+ #ifndef SIDEBAR_H
+ #define SIDEBAR_H
+ 
+-struct MBOX_LIST {
+-	char *path;
+-	int msgcount;
+-	int new;
+-} MBLIST;
+-
+ /* parameter is whether or not to go to the status line */
+ /* used for omitting the last | that covers up the status bar in the index */
+ int draw_sidebar(int);
+ void scroll_sidebar(int, int);
+ void set_curbuffy(char*);
+ void set_buffystats(CONTEXT*);
++void get_selbuffypath(char*, size_t);
+ 
+ #endif /* SIDEBAR_H */

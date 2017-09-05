@@ -1,0 +1,28 @@
+Subject: [PATCH] Make sure we've got a real terminal
+Maintainer: Miroslav Koškár <http://mkoskar.com/>
+Version: v1
+
+---
+ pinentry/pinentry-curses.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/pinentry/pinentry-curses.c b/pinentry/pinentry-curses.c
+index 58da255..c1000d9 100644
+--- a/pinentry/pinentry-curses.c
++++ b/pinentry/pinentry-curses.c
+@@ -745,11 +745,15 @@ dialog_run (pinentry_t pinentry, const char *tty_name, const char *tty_type)
+ 	  errno = err;
+ 	  return -1;
+ 	}
++      if (!isatty(fileno(ttyfi)) || !isatty(fileno(ttyfo)))
++        return -1;
+       screen = newterm (tty_type, ttyfo, ttyfi);
+       set_term (screen);
+     }
+   else
+     {
++      if (!isatty(0) || !isatty(1))
++        return -1;
+       if (!init_screen)
+ 	{
+ 	  init_screen = 1;

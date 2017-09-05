@@ -1,0 +1,302 @@
+Subject: [PATCH] Silent `collapse_all` and less cursor flashes
+Maintainer: Miroslav Koškár <http://mkoskar.com/>
+Version: v1
+
+* make `collapse_all` operation fail silently on CHECK_MSGCOUNT
+* set `mutt_curs_set` explicitly to avoid cursor flashing
+
+---
+ curs_main.c | 79 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 75 insertions(+), 4 deletions(-)
+
+diff --git a/curs_main.c b/curs_main.c
+index 21dd8f4..f8e499b 100644
+--- a/curs_main.c
++++ b/curs_main.c
+@@ -617,8 +617,6 @@ int mutt_index_menu (void)
+       if (op == -1)
+ 	continue; /* either user abort or timeout */
+
+-      mutt_curs_set (1);
+-
+       /* special handling for the tag-prefix function */
+       if (op == OP_TAG_PREFIX)
+       {
+@@ -692,8 +690,6 @@ int mutt_index_menu (void)
+ 	menu->oldcurrent = menu->current;
+       else
+ 	menu->oldcurrent = -1;
+-
+-      mutt_curs_set (1);	/* fallback from the pager */
+     }
+
+     switch (op)
+@@ -750,6 +746,9 @@ int mutt_index_menu (void)
+
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+         if (isdigit (LastKey)) mutt_ungetch (LastKey, 0);
+ 	buf[0] = 0;
+ 	if (mutt_get_field (_("Jump to message: "), buf, sizeof (buf), 0) != 0
+@@ -809,6 +808,9 @@ int mutt_index_menu (void)
+ 	CHECK_ACL(M_ACL_DELETE, _("delete message(s)"));
+
+ 	CHECK_ATTACH;
++
++	mutt_curs_set (1);
++
+ 	mutt_pattern_func (M_DELETE, _("Delete messages matching: "));
+ 	menu->redraw = REDRAW_INDEX | REDRAW_STATUS;
+ 	break;
+@@ -844,6 +846,9 @@ int mutt_index_menu (void)
+       case OP_MAIN_LIMIT:
+
+ 	CHECK_IN_MAILBOX;
++
++	mutt_curs_set (1);
++
+ 	menu->oldcurrent = (Context->vcount && menu->current >= 0 && menu->current < Context->vcount) ?
+ 		CURHDR->index : -1;
+ 	if (mutt_pattern_func (M_LIMIT, _("Limit to messages matching: ")) == 0)
+@@ -880,6 +885,8 @@ int mutt_index_menu (void)
+ 	 break;
+ 	}
+
++	mutt_curs_set (1);
++
+ 	if (query_quadoption (OPT_QUIT, _("Quit Mutt?")) == M_YES)
+ 	{
+ 	  int check;
+@@ -912,6 +919,9 @@ int mutt_index_menu (void)
+
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	if ((menu->current = mutt_search_command (menu->current, op)) == -1)
+ 	  menu->current = menu->oldcurrent;
+ 	else
+@@ -921,6 +931,8 @@ int mutt_index_menu (void)
+       case OP_SORT:
+       case OP_SORT_REVERSE:
+
++	mutt_curs_set (1);
++
+ 	if (mutt_select_sort ((op == OP_SORT_REVERSE)) == 0)
+ 	{
+ 	  if (Context && Context->msgcount)
+@@ -970,6 +982,9 @@ int mutt_index_menu (void)
+
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	mutt_pattern_func (M_TAG, _("Tag messages matching: "));
+ 	menu->redraw = REDRAW_INDEX | REDRAW_STATUS;
+ 	break;
+@@ -981,6 +996,8 @@ int mutt_index_menu (void)
+ 	CHECK_READONLY;
+ 	CHECK_ACL(M_ACL_DELETE, _("undelete message(s)"));
+
++	mutt_curs_set (1);
++
+ 	if (mutt_pattern_func (M_UNDELETE, _("Undelete messages matching: ")) == 0)
+ 	  menu->redraw = REDRAW_INDEX | REDRAW_STATUS;
+ 	break;
+@@ -989,6 +1006,9 @@ int mutt_index_menu (void)
+
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	if (mutt_pattern_func (M_UNTAG, _("Untag messages matching: ")) == 0)
+ 	  menu->redraw = REDRAW_INDEX | REDRAW_STATUS;
+ 	break;
+@@ -1239,6 +1259,8 @@ int mutt_index_menu (void)
+ 	 break;
+ 	}
+
++	mutt_curs_set (1);
++
+ 	if ((menu->menu == MENU_MAIN)
+ 	    && (query_quadoption (OPT_QUIT,
+ 				  _("Exit Mutt without saving?")) == M_YES))
+@@ -1441,6 +1463,9 @@ int mutt_index_menu (void)
+       case OP_DECODE_SAVE:
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+         if (mutt_save_message (tag ? NULL : CURHDR,
+ 			       (op == OP_DECRYPT_SAVE) ||
+ 			       (op == OP_SAVE) || (op == OP_DECODE_SAVE),
+@@ -1710,6 +1735,9 @@ int mutt_index_menu (void)
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
+ 	CHECK_READONLY;
++
++	mutt_curs_set (1);
++
+ 	/* CHECK_ACL(M_ACL_WRITE); */
+
+ 	if (mutt_change_flag (tag ? NULL : CURHDR, (op == OP_MAIN_SET_FLAG)) == 0)
+@@ -1765,6 +1793,10 @@ int mutt_index_menu (void)
+        break;
+
+       case OP_MAIN_COLLAPSE_ALL:
++
++	if (Context && !Context->msgcount)
++	  break;
++
+         CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
+
+@@ -1829,11 +1861,16 @@ int mutt_index_menu (void)
+ 	CHECK_ATTACH;
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	ci_bounce_message (tag ? NULL : CURHDR, &menu->redraw);
+ 	break;
+
+       case OP_CREATE_ALIAS:
+
++	mutt_curs_set (1);
++
+         mutt_create_alias (Context && Context->vcount ? CURHDR->env : NULL, NULL);
+ 	MAYBE_REDRAW (menu->redraw);
+         menu->redraw |= REDRAW_CURRENT;
+@@ -1841,6 +1878,9 @@ int mutt_index_menu (void)
+
+       case OP_QUERY:
+ 	CHECK_ATTACH;
++
++	mutt_curs_set (1);
++
+ 	mutt_query_menu (NULL, 0);
+ 	MAYBE_REDRAW (menu->redraw);
+ 	break;
+@@ -1917,6 +1957,8 @@ int mutt_index_menu (void)
+
+       case OP_ENTER_COMMAND:
+
++	mutt_curs_set (1);
++
+ 	CurrentMenu = MENU_MAIN;
+ 	mutt_enter_command ();
+ 	mutt_check_rescore (Context);
+@@ -1946,6 +1988,9 @@ int mutt_index_menu (void)
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
+ 	CHECK_ATTACH;
++
++	mutt_curs_set (1);
++
+ 	if (option (OPTPGPAUTODEC) && (tag || !(CURHDR->security & PGP_TRADITIONAL_CHECKED)))
+ 	  mutt_check_traditional_pgp (tag ? NULL : CURHDR, &menu->redraw);
+ 	ci_send_message (SENDFORWARD, NULL, NULL, Context, tag ? NULL : CURHDR);
+@@ -1962,6 +2007,7 @@ int mutt_index_menu (void)
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
+ 	CHECK_ATTACH;
++
+ 	if (option (OPTPGPAUTODEC) && (tag || !(CURHDR->security & PGP_TRADITIONAL_CHECKED)))
+ 	  mutt_check_traditional_pgp (tag ? NULL : CURHDR, &menu->redraw);
+ 	ci_send_message (SENDREPLY|SENDGROUPREPLY, NULL, NULL, Context, tag ? NULL : CURHDR);
+@@ -1982,6 +2028,9 @@ int mutt_index_menu (void)
+       case OP_MAIL:
+
+ 	CHECK_ATTACH;
++
++	mutt_curs_set (1);
++
+ 	ci_send_message (0, NULL, NULL, Context, NULL);
+ 	menu->redraw = REDRAW_FULL;
+ 	break;
+@@ -1990,6 +2039,9 @@ int mutt_index_menu (void)
+         if (!(WithCrypto & APPLICATION_PGP))
+           break;
+ 	CHECK_ATTACH;
++
++	mutt_curs_set (1);
++
+ 	ci_send_message (SENDKEY, NULL, NULL, NULL, NULL);
+ 	menu->redraw = REDRAW_FULL;
+ 	break;
+@@ -2000,6 +2052,9 @@ int mutt_index_menu (void)
+           break;
+         CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+         crypt_extract_keys_from_messages(tag ? NULL : CURHDR);
+         menu->redraw = REDRAW_FULL;
+         break;
+@@ -2024,6 +2079,9 @@ int mutt_index_menu (void)
+
+ 	CHECK_MSGCOUNT;
+ 	CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	mutt_pipe_message (tag ? NULL : CURHDR);
+
+ #ifdef USE_IMAP
+@@ -2043,6 +2101,9 @@ int mutt_index_menu (void)
+
+ 	CHECK_MSGCOUNT;
+ 	CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	mutt_print_message (tag ? NULL : CURHDR);
+
+ #ifdef USE_IMAP
+@@ -2088,6 +2149,9 @@ int mutt_index_menu (void)
+       case OP_RECALL_MESSAGE:
+
+ 	CHECK_ATTACH;
++
++	mutt_curs_set (1);
++
+ 	ci_send_message (SENDPOSTPONED, NULL, NULL, Context, NULL);
+ 	menu->redraw = REDRAW_FULL;
+ 	break;
+@@ -2098,6 +2162,8 @@ int mutt_index_menu (void)
+         CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
+
++	mutt_curs_set (1);
++
+         if (tag)
+         {
+ 	  for (j = 0; j < Context->vcount; j++)
+@@ -2117,6 +2183,9 @@ int mutt_index_menu (void)
+ 	CHECK_ATTACH;
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
++
++	mutt_curs_set (1);
++
+ 	if (option (OPTPGPAUTODEC) && (tag || !(CURHDR->security & PGP_TRADITIONAL_CHECKED)))
+ 	  mutt_check_traditional_pgp (tag ? NULL : CURHDR, &menu->redraw);
+ 	ci_send_message (SENDREPLY, NULL, NULL, Context, tag ? NULL : CURHDR);
+@@ -2125,6 +2194,8 @@ int mutt_index_menu (void)
+
+       case OP_SHELL_ESCAPE:
+
++	mutt_curs_set (1);
++
+ 	mutt_shell_escape ();
+ 	MAYBE_REDRAW (menu->redraw);
+ 	break;
