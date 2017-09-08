@@ -10,6 +10,7 @@ conflicts=('ddcutil-git')
 source=(https://github.com/rockowitz/ddcutil/archive/v${pkgver}.tar.gz)
 sha256sums=('7bfa9bd1dad7aac1853cf1070d2becf47156c158b84ae874cd77e8fd7d4e44d5')
 arch=('i686' 'x86_64')
+depends=(glib2 libusb udev libdrm libxrandr)
 
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"

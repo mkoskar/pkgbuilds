@@ -3,7 +3,7 @@
 _basename='gtk-theme-mist'
 
 pkgname='gtk3-theme-mist-git'
-pkgver=r28.92ad7d3
+pkgver=r29.130c5ef
 pkgrel=1
 pkgdesc='GTK 3.x theme matching GTK 2.x Mist theme'
 url='https://github.com/mkoskar/gtk-theme-mist'

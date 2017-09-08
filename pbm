@@ -11,12 +11,13 @@ readonly prgname=${0##*/}
 declare -i RETSTAT=0
 trap_err() {
     local retstat=$?
+    local cmd=$BASH_COMMAND
     if (( retstat > 200 )); then
         declare -gi RETSTAT=$((retstat-200))
         return $RETSTAT
     fi
     printf '%s: line %d: %s: (%d)\n' \
-        "${BASH_SOURCE[1]}" "${BASH_LINENO[0]}" "$BASH_COMMAND" "$retstat"
+        "${BASH_SOURCE[1]}" "${BASH_LINENO[0]}" "$cmd" "$retstat"
     (( BASH_SUBSHELL )) && exit $retstat || exit 1
 } >&2
 trap trap_err ERR
@@ -42,6 +43,8 @@ _usage() {
 	  lg | lga | log | loga | diff | checkout pkgbase
 
 	  aur-add | aur-stat | aur-reset | aur-commit | aur-push pkgbase
+
+	  prune
 	EOF
 }
 usage() { _usage; exit 0; }
@@ -202,12 +205,14 @@ pacman_conf() {
 		SigLevel = Required DatabaseOptional
 		LocalFileSigLevel = Optional
 		HoldPkg = pacman glibc
-		CacheDir = /var/cache/pacman/pkg/
 	EOF
     if (( $# > 1 )); then
         for db in "$dbname" "${dbdeps[@]}"; do
             printf 'CacheDir = /packages/%s/\n' "$db"
         done
+    fi
+    echo "CacheDir = /var/cache/pacman/pkg/"
+    if (( $# > 1 )); then
         for db in "$dbname" "${dbdeps[@]}"; do
             cat <<-EOF
 				[$db]
@@ -272,12 +277,13 @@ build() {
         pacman_conf "$CARCH" >"$pacman_conf"
         mkarchroot -C "$pacman_conf" "$chrootdir/root" base-devel git namcap
     else
-        arch-nspawn -c /var/cache/pacman/pkg/ "$chrootdir/root" pacman -Syu --noconfirm
+        arch-nspawn -c /var/cache/pacman/pkg "$chrootdir/root" pacman -Syu --noconfirm
     fi
     pacman_conf "$CARCH" 1 >"$pacman_conf"
     echo
     declare -a binds
     binds=(
+        -d /var/cache/pacman/pkg
         -D "$repodir:/packages/$dbname"
         -D "$pacman_conf:/etc/pacman.conf"
     )
@@ -288,7 +294,6 @@ build() {
     while read -r pkgbase; do
         rsync -a "$basedir/$pkgbase" "$tmpdir"
         cd "$tmpdir/$pkgbase"
-        rm -rf "$logdir/$pkgbase-"*
         sudo env \
             PKGDEST="$repodir" \
             SRCDEST="$srcdir" \
@@ -468,7 +473,6 @@ export -f probe_sync
 sync() {
     declare -A queue
     local parallel_init='set -eu -o pipefail' pkgbase tmpfile pid v
-    export PARALLEL_SHELL='bash'
     parallel -j10 "$parallel_init; probe_init" ::: "${ptypes[@]}"
     while read -r pkgbase; do
         [[ -e $basedir/$pkgbase ]] || {
@@ -582,6 +586,20 @@ resolve() {
             log "$pkgbase - no such pkgbase, skipped"
         fi
     done
+}
+
+prune() {
+    all >"$tmpdir/all"
+    rm -rf "$statdir.bak"
+    if [[ -e $statdir ]]; then
+        mv "$statdir" "$statdir.bak"
+        mkdir -p "$statdir"
+        cd "$statdir.bak"
+        while read -r pkgbase; do
+            mv "$pkgbase" "$statdir" &>/dev/null || true
+        done <"$tmpdir/all"
+        rm -rf "$statdir.bak"
+    fi
 }
 
 # ----------------------------------------
@@ -871,10 +889,10 @@ case $cmd in
         case $cmd in
             stat | resolve)
                 index
-                valid <"$input" | $cmd
+                valid <"$input" | "$cmd"
                 ;;
             *)
-                $cmd <"$input"
+                "$cmd" <"$input"
                 ;;
         esac
         ;;
@@ -887,6 +905,9 @@ case $cmd in
         (( $# )) || set -- ${pkgbase:+"$pkgbase"}
         (( $# )) || usage_err
         aur_cmd "$cmd" "$1"
+        ;;
+    prune)
+        "$cmd"
         ;;
     *)
         usage_err

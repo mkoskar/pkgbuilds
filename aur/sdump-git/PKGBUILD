@@ -1,7 +1,7 @@
 # Maintainer: BrainDamage
 pkgname="sdump-git"
 pkgrel=1
-pkgver=20170904.c5fb55b
+pkgver=20170906.c5fb55b
 pkgdesc="sixel variant of idump with a w3mimgdisplay-compatible program"
 arch=("i686" "x86_64")
 url="https://github.com/uobikiemukot/sdump/"

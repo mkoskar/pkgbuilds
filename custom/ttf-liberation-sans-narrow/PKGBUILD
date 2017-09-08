@@ -18,7 +18,7 @@ depends=('fontconfig' 'xorg-fonts-encodings' 'xorg-font-utils')
 optdepends=('ttf-liberation: Main liberation fonts')
 provides=('ttf-font')
 install=ttf.install
-source=("https://fedorahosted.org/releases/l/i/liberation-fonts/liberation-fonts-ttf-$pkgver.tar.gz"
+source=("https://releases.pagure.org/liberation-fonts/liberation-fonts-ttf-$pkgver.tar.gz"
         30-0-liberation-sans-narrow.conf)
 sha256sums=('61a7e2b6742a43c73e8762cdfeaf6dfcf9abdd2cfa0b099a9854d69bc4cfee5c'
             'b9da42411e2035d87a366c7de9f85004e681a2fc4ea7dd82a17e7a1ce9715908')
