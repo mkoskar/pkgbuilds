@@ -23,5 +23,5 @@ pkgver() {
 package() {
     cd "$_basename"
     install -d "$pkgdir/usr/share/themes/Mist"
-    cp -dr --preserve=mode Mist/gtk-3.0 "$pkgdir/usr/share/themes/Mist"
+    cp -dr --preserve=mode -t "$pkgdir/usr/share/themes/Mist" Mist/gtk-3.0
 }

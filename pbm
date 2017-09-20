@@ -50,10 +50,11 @@ _usage() {
 usage() { _usage; exit 0; }
 usage_err() { _usage; exit 2; } >&2
 
-log() {
-    printf '%s\n' "==> $*"
-} >&2
-export -f log
+log() { printf '%s\n' "==> $*"; } >&2
+info() { [[ ${PBM_QUIET-} ]] || log "$*"; }
+error() { log "ERROR: $*"; }
+warn() { log "WARN: $*"; }
+export -f log info error warn
 
 # ----------------------------------------
 
@@ -66,11 +67,11 @@ index() {
     while read -r pkgbase; do
         cd "$basedir/$pkgbase"
         [[ -e PKGBUILD ]] || {
-            log "ERROR: $pkgbase - PKGBUILD missing"
+            error "$pkgbase - PKGBUILD missing"
             continue
         }
         if [[ PKGBUILD -nt .SRCINFO ]]; then
-            log "$pkgbase - generating .SRCINFO"
+            info "$pkgbase - generating .SRCINFO"
             tmpfile="$tmpdir/$pkgbase.SRCINFO"
             makepkg -m --printsrcinfo 2>&1 >"$tmpfile" |
                 ( grep -v 'Exiting...' || true ) || continue
@@ -88,16 +89,16 @@ index() {
         ' <.SRCINFO >"$tmpfile" || continue
         readarray -t pkgnames <"$tmpfile"
         (( ${#pkgnames[@]} )) || {
-            log "ERROR: $pkgbase - no valid pkgname"
+            error "$pkgbase - no valid pkgname"
             continue
         }
         for pkgname in "${pkgnames[@]}"; do
             [[ $pkgname ]] || {
-                log "ERROR: $pkgbase - empty pkgname"
+                error "$pkgbase - empty pkgname"
                 continue 2
             }
             if [[ ${pkgname2base[$pkgname]+set} ]]; then
-                log "ERROR: $pkgbase - conflicts with ${pkgname2base[$pkgname]}/$pkgname"
+                error "$pkgbase - conflicts with ${pkgname2base[$pkgname]}/$pkgname"
                 continue 2
             fi
         done
@@ -187,7 +188,7 @@ outdated() {
                 printf '%s\n' "$pkgbase"
                 continue 2
             elif (( cmp < 0 )); then
-                log "WARN: $pkgname - $ver < $repover"
+                warn "$pkgname - $ver < $repover"
             fi
         done <"$tmpfile"
     done
@@ -267,7 +268,7 @@ build() {
     done <"$input" | tsort | tac | ( grep -Fxf "$input" || true ) >"$queue"
     [[ -s $queue ]] || return 0
     echo
-    log 'Retrieving and validating sources...'
+    info 'Retrieving and validating sources...'
     parallel -j10 verifysource <"$queue" \
         >"$queue.verified" 3>"$queue.skipped" || true
     echo
@@ -307,7 +308,7 @@ build() {
             mv "$logdir/"{PKGBUILD-namcap.log,"$pkgbase-PKGBUILD-namcap.log"}
         fi
         if [[ PKGBUILD -nt .SRCINFO ]]; then
-            log "$pkgbase - generating .SRCINFO"
+            info "$pkgbase - generating .SRCINFO"
             tmpfile="$tmpdir/$pkgbase.SRCINFO"
             makepkg -m --printsrcinfo 2>&1 >"$tmpfile" |
                 ( grep -v 'Exiting...' || true ) || continue
@@ -339,7 +340,7 @@ probes() {
 pargs() {
     local pid=$1 ptype=${1%%/*} pname=${1#*/}
     [[ ! $pid || $pid =~ [[:blank:]]+ || $ptype = "$pid" ]] && {
-        log "ERROR: '$pid' - invalid probe ID"
+        error "'$pid' - invalid probe ID"
         return
     }
     shift
@@ -376,7 +377,7 @@ probe_init() {
             ;;
         *) return ;;
     esac
-    log "init: $ptype"
+    info "init: $ptype"
 }
 export -f probe_init
 
@@ -402,7 +403,7 @@ probe_sync() {
             if [[ -e $pid ]]; then
                 cd "$pid"
                 git pull -q --ff-only || {
-                    log "ERROR: $pid - skipped"
+                    error "$pid - skipped"
                     return 1
                 }
             else
@@ -466,7 +467,7 @@ probe_sync() {
             esac
             ;;
     esac
-    log "synced: $pid"
+    info "synced: $pid"
 }
 export -f probe_sync
 
@@ -476,7 +477,7 @@ sync() {
     parallel -j10 "$parallel_init; probe_init" ::: "${ptypes[@]}"
     while read -r pkgbase; do
         [[ -e $basedir/$pkgbase ]] || {
-            log "$pkgbase - no such pkgbase, skipped"
+            info "$pkgbase - no such pkgbase, skipped"
             continue
         }
         tmpfile="$tmpdir/$pkgbase.probes"
@@ -518,10 +519,10 @@ stat() {
                 force=0
                 if [[ $ptype = 'aur' ]]; then
                     unpushed=0
-                    ohead=$(git rev-parse -q --verify origin/HEAD || true)
+                    ohead=$(git rev-parse -q --verify origin/master || true)
                     if [[ $ohead ]]; then
                         if [[ $newv && $newv != "$ohead" ]]; then
-                            unpushed=$(git log --format=oneline --ancestry-path origin/HEAD..HEAD | wc -l)
+                            unpushed=$(git log --format=oneline --ancestry-path origin/master..HEAD | wc -l)
                             (( unpushed )) || unpushed=-2
                             force=1
                         fi
@@ -545,7 +546,7 @@ stat() {
                             elif (( unpushed == -1 )); then
                                 printf ' ; not AUR pushed'
                             elif (( unpushed == -2 )); then
-                                printf ' ; HEAD diverged from origin/HEAD'
+                                printf ' ; HEAD diverged from origin/master'
                             fi
                         else
                             printf '    %s : no commits yet' "$pid"
@@ -563,7 +564,7 @@ stat() {
                 printf '\n%s - no synced probes\n' "$pkgbase"
             }
         else
-            log "$pkgbase - no such pkgbase, skipped"
+            info "$pkgbase - no such pkgbase, skipped"
         fi
     done
     (( ! cnt )) || echo
@@ -583,7 +584,7 @@ resolve() {
                 printf '%s %s\n' "$pid" "$newv"
             done <"$tmpfile"  >"$statdir/$pkgbase"
         else
-            log "$pkgbase - no such pkgbase, skipped"
+            info "$pkgbase - no such pkgbase, skipped"
         fi
     done
 }
@@ -600,6 +601,7 @@ prune() {
         done <"$tmpdir/all"
         rm -rf "$statdir.bak"
     fi
+    cd "$repodir" && paccache -r -c "$repodir"
 }
 
 # ----------------------------------------
@@ -621,7 +623,7 @@ probe_cmd() {
             [[ -e $syncdir/$pid ]] && opts+=("$pid")
         done <"$tmpfile"
         (( ${#opts[@]} )) || {
-            log "$pkgbase - no sources found"
+            info "$pkgbase - no sources found"
             return 1
         }
         if (( ${#opts[@]} > 1 )); then
@@ -673,7 +675,7 @@ probe_cmd() {
                 ;;
         esac
     else
-        log "$pkgbase - no such pkgbase"
+        info "$pkgbase - no such pkgbase"
         return 1
     fi
 }
@@ -686,14 +688,14 @@ aur_cmd() {
         cd "$basedir/$pkgbase"
         if [[ $cmd = 'aur-add' ]]; then
             [[ -e $syncdir/$pid ]] && {
-                log "$pid - already exists"
+                info "$pid - already exists"
                 return
             }
             probe_sync "$pid" "$pkgbase" 1
             return
         fi
         [[ -e $syncdir/$pid ]] || {
-            log "ERROR: $pid not synced"
+            error "$pid not synced"
             return 1
         }
         case $cmd in
@@ -705,7 +707,7 @@ aur_cmd() {
                 ;;
             aur-reset)
                 cd "$syncdir/$pid"
-                git reset --hard origin/HEAD
+                git reset --hard origin/master
                 ;;
             aur-commit)
                 {
@@ -718,10 +720,11 @@ aur_cmd() {
             aur-push)
                 cd "$syncdir/$pid"
                 git push origin master
+                pbm resolve "$pkgbase"
                 ;;
         esac
     else
-        log "$pkgbase - no such pkgbase"
+        info "$pkgbase - no such pkgbase"
         return 1
     fi
 }
@@ -735,7 +738,7 @@ if [[ ! -e .pbmrc ]]; then
         pkgbase=${PWD##*/}
         cd ..
     else
-        log 'ERROR: .pbmrc missing'
+        error '.pbmrc missing'
         exit 1
     fi
 fi
@@ -747,7 +750,7 @@ readonly basedir=$PWD
 
 export CARCH=${CARCH:-$(uname -m)}
 setarch --list | grep -Fxq -- "$CARCH" || {
-    log "ERROR: $CARCH - unsupported architecture"
+    error "$CARCH - unsupported architecture"
     exit 1
 }
 
@@ -883,7 +886,7 @@ case $cmd in
             fi
         } >"$input"
         [[ -s $input ]] || {
-            log "ERROR: nothing to do"
+            error 'nothing to do'
             exit 1
         }
         case $cmd in
