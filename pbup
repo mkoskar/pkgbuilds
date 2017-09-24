@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -eu
+
+export PBM_QUIET=1
+
+tmpdir=$(mktemp -d)
+cleanup() { rm -rf "$tmpdir"; }
+trap cleanup EXIT
+
+for pbmrc in ~/projects/pub/pkgbuilds/*/.pbmrc; do
+    pbdir=${pbmrc%/*}
+    cd "$pbdir"
+
+    (
+        pbm sync &>"$tmpdir/sync"
+        if [[ -s $tmpdir/sync ]]; then
+            echo
+            cat "$tmpdir/sync"
+            echo
+        fi
+        pbm stat
+    ) &>"$tmpdir/out"
+
+    if [[ -s $tmpdir/out ]]; then
+        echo $'\n--------------------------------------------------'
+        echo "> $pbdir:"
+        cat "$tmpdir/out"
+    fi
+done

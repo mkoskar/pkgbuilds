@@ -1,6 +1,6 @@
 pkgbase = vcvrack-fundamental-git
 	pkgdesc = Fundamental VCV modules
-	pkgver = r15.67851d7
+	pkgver = r16.0115b02
 	pkgrel = 1
 	url = https://github.com/VCVRack/Fundamental
 	arch = i686

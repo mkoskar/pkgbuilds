@@ -2,5 +2,5 @@ pkgbuilds
 =========
 
 :Description: My Arch Linux PKGBUILDs
-:License: GNU GPLv2 or later
+:License: Apache 2.0
 :AUR: https://aur.archlinux.org/packages.php?SeB=m&K=mkoskar

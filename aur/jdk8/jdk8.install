@@ -1,5 +1,5 @@
-THIS_JAVA='java-9-jdk'
-NAME='JDK'
+THIS_JAVA='java-8-jdk'
+NAME='JDK 8'
 
 all_off="$(tput sgr0)"
 bold="${all_off}$(tput bold)"

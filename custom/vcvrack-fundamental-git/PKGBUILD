@@ -4,7 +4,7 @@ _basename='vcvrack'
 _plugname='Fundamental'
 
 pkgname='vcvrack-fundamental-git'
-pkgver=r15.67851d7
+pkgver=r16.0115b02
 pkgrel=1
 pkgdesc='Fundamental VCV modules'
 url='https://github.com/VCVRack/Fundamental'

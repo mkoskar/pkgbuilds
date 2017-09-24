@@ -40,7 +40,7 @@ _usage() {
 
 	  sync | resync | stat | resolve [pkgbase...]
 
-	  lg | lga | log | loga | diff | checkout pkgbase
+	  lg | lga | log | loga | diff | checkout | co pkgbase
 
 	  aur-add | aur-stat | aur-reset | aur-commit | aur-push pkgbase
 
@@ -667,7 +667,7 @@ probe_cmd() {
                         local b="$syncdir/$pid${path:+/$path}"
                         d -x .git "$a" "$b" || exit
                         ;;
-                    checkout)
+                    checkout | co)
                         [[ ${path-} ]] && cd "$path"
                         rsync -a --delete --exclude=.git . "$basedir/$pkgbase"
                         ;;
@@ -886,8 +886,8 @@ case $cmd in
             fi
         } >"$input"
         [[ -s $input ]] || {
-            error 'nothing to do'
-            exit 1
+            info 'nothing to do'
+            exit 0
         }
         case $cmd in
             stat | resolve)
@@ -899,7 +899,7 @@ case $cmd in
                 ;;
         esac
         ;;
-    lg | lga | log | loga | diff | checkout)
+    lg | lga | log | loga | diff | checkout | co)
         (( $# )) || set -- ${pkgbase:+"$pkgbase"}
         (( $# )) || usage_err
         probe_cmd "$cmd" "$1"

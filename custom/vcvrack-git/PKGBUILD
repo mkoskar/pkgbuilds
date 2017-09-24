@@ -3,7 +3,7 @@
 _basename='vcvrack'
 
 pkgname='vcvrack-git'
-pkgver=r141.9e5076a
+pkgver=r163.eb28397
 pkgrel=1
 pkgdesc='Open-source virtual Eurorack DAW'
 url='https://github.com/VCVRack/Rack'
