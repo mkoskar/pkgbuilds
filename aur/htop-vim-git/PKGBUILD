@@ -18,7 +18,7 @@ options=('!emptydirs')
 source=("git+${url}.git"
         'vim-keybindings.patch')
 sha256sums=('SKIP'
-            '28a46dda31379ada9380d4b1325a5cf708826b808c0d631c10d3f8d3c7142d3d')
+            '1fb8e8bfa0575b99a50e49f1f853e921bba457598b22942a1898f5be772e0c91')
 
 pkgver() {
     cd "${srcdir}/${_pkgname}"

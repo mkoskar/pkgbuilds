@@ -720,6 +720,7 @@ aur_cmd() {
             aur-push)
                 cd "$syncdir/$pid"
                 git push origin master
+                cd "$basedir"
                 pbm resolve "$pkgbase"
                 ;;
         esac
@@ -791,17 +792,19 @@ case $cmd in
         index
         input="$tmpdir/input"
         if (( $# )); then
-            printf '%s\n' "$@" >"$input"
-        else
-            if [[ -t 0 ]]; then
-                if [[ ${pkgbase-} ]]; then
-                    printf '%s\n' "$pkgbase" >"$input"
+            for arg in "$@"; do
+                if [[ $arg = '-' ]]; then
+                    cat >>"$input"
                 else
-                    all | outdated | build
-                    exit $RETSTAT
+                    printf '%s\n' "$arg" >>"$input"
                 fi
+            done
+        else
+            if [[ ${pkgbase-} ]]; then
+                printf '%s\n' "$pkgbase" >"$input"
             else
-                cat >"$input"
+                all | outdated | build
+                exit $RETSTAT
             fi
         fi
         if (( depends )); then
@@ -834,16 +837,18 @@ case $cmd in
                 maintained) cower -q -m "$AUR_MAINTAINER" ;;
                 *)
                     if (( $# )); then
-                        printf '%s\n' "$@"
-                    else
-                        if [[ -t 0 ]]; then
-                            if [[ ${pkgbase-} ]]; then
-                                printf '%s\n' "$pkgbase"
+                        for arg in "$@"; do
+                            if [[ $arg = '-' ]]; then
+                                cat
                             else
-                                all
+                                printf '%s\n' "$arg"
                             fi
+                        done
+                    else
+                        if [[ ${pkgbase-} ]]; then
+                            printf '%s\n' "$pkgbase"
                         else
-                            cat
+                            all
                         fi
                     fi
                     ;;
@@ -872,16 +877,18 @@ case $cmd in
         input="$tmpdir/input"
         {
             if (( $# )); then
-                printf '%s\n' "$@"
-            else
-                if [[ -t 0 ]]; then
-                    if [[ ${pkgbase-} ]]; then
-                        printf '%s\n' "$pkgbase"
+                for arg in "$@"; do
+                    if [[ $arg = '-' ]]; then
+                        cat
                     else
-                        all
+                        printf '%s\n' "$arg"
                     fi
+                done
+            else
+                if [[ ${pkgbase-} ]]; then
+                    printf '%s\n' "$pkgbase"
                 else
-                    cat
+                    all
                 fi
             fi
         } >"$input"

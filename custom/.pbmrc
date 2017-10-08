@@ -1,6 +1,8 @@
 # shellcheck disable=SC2034
 # vim: ft=sh
 
+dbdeps=(aur)
+
 alts shaman-git shaman
 alts sxiv-git sxiv
 

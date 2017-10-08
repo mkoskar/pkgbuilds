@@ -1,5 +1,5 @@
 diff --git a/Action.c b/Action.c
-index f5d7de4..b19de0c 100644
+index a6394ac..089ee27 100644
 --- a/Action.c
 +++ b/Action.c
 @@ -382,7 +382,7 @@ static Htop_Reaction actionRedraw() {
