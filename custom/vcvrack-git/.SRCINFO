@@ -1,7 +1,7 @@
 pkgbase = vcvrack-git
 	pkgdesc = Open-source virtual Eurorack DAW
-	pkgver = r224.a358e98
-	pkgrel = 2
+	pkgver = r283.6db1177
+	pkgrel = 1
 	url = https://github.com/VCVRack/Rack
 	arch = i686
 	arch = x86_64

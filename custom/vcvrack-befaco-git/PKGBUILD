@@ -4,7 +4,7 @@ _basename='vcvrack'
 _plugname='Befaco'
 
 pkgname='vcvrack-befaco-git'
-pkgver=r14.ab5a1dd
+pkgver=r18.402dc9f
 pkgrel=1
 pkgdesc="Befaco's VCV modules"
 url='https://github.com/VCVRack/Befaco'
