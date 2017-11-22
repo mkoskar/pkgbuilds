@@ -1,0 +1,23 @@
+pkgbase = wmutils-git
+	pkgdesc = A set of tools for X windows manipulation.
+	pkgver = 1.4.r1.g2f64709
+	pkgrel = 1
+	url = https://github.com/wmutils/core
+	arch = i686
+	arch = x86_64
+	license = ISC
+	makedepends = git
+	depends = libxcb
+	depends = xcb-util
+	depends = xcb-util-wm
+	depends = libwm-git
+	conflicts = wmutils
+	source = wmutils-git::git+https://github.com/wmutils/core.git
+	source = git+https://github.com/wmutils/opt.git
+	source = git+https://github.com/wmutils/contrib.git
+	md5sums = SKIP
+	md5sums = SKIP
+	md5sums = SKIP
+
+pkgname = wmutils-git
+

@@ -1,6 +1,6 @@
 pkgbase = vcvrack-git
 	pkgdesc = Open-source virtual Eurorack DAW
-	pkgver = r283.6db1177
+	pkgver = v0.5.0.r0.g7c2312f
 	pkgrel = 1
 	url = https://github.com/VCVRack/Rack
 	arch = i686
@@ -14,7 +14,7 @@ pkgbase = vcvrack-git
 	depends = libcurl-compat
 	depends = libzip
 	depends = rtmidi
-	depends = portaudio
+	depends = rtaudio
 	depends = gtk2
 	source = vcvrack::git+https://github.com/VCVRack/Rack.git
 	source = git+https://github.com/AndrewBelt/osdialog.git

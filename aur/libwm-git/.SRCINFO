@@ -1,0 +1,18 @@
+pkgbase = libwm-git
+	pkgdesc = A library for X windows manipulation.
+	pkgver = 1.0.r10.g8af38ef
+	pkgrel = 1
+	url = https://github.com/wmutils/libwm
+	arch = i686
+	arch = x86_64
+	license = ISC
+	makedepends = git
+	depends = libxcb
+	depends = xcb-util-wm
+	provides = libwm
+	conflicts = libwm
+	source = libwm-git::git+https://github.com/wmutils/libwm.git
+	md5sums = SKIP
+
+pkgname = libwm-git
+

@@ -4,7 +4,7 @@ _basename='vcvrack'
 _plugname='AudibleInstruments'
 
 pkgname='vcvrack-audible-instruments-git'
-pkgver=r45.527fab2
+pkgver=v0.4.0.r27.g66936b0
 pkgrel=1
 pkgdesc="Mutable Instruments' VCV modules"
 url='https://github.com/VCVRack/AudibleInstruments'
@@ -46,8 +46,7 @@ sha256sums=(
 
 pkgver() {
     cd "$_basename-$_plugname"
-    printf 'r%s.%s' "$(git rev-list --count HEAD)" \
-                    "$(git rev-parse --short HEAD)"
+    git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 prepare() {

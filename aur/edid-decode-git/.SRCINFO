@@ -1,6 +1,6 @@
 pkgbase = edid-decode-git
 	pkgdesc = EDID decoder and conformance tester
-	pkgver = r131.b202b67
+	pkgver = r171.f56f329
 	pkgrel = 1
 	url = http://cgit.freedesktop.org/xorg/app/edid-decode/
 	arch = i686

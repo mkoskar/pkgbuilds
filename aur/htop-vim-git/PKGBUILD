@@ -2,7 +2,7 @@
 
 _pkgname=htop
 pkgname=${_pkgname}-vim-git
-pkgver=981.e3f65c8
+pkgver=984.5283195
 pkgrel=1
 pkgdesc="Interactive text-mode process viewer. Patched for vim keybindings"
 url="https://github.com/hishamhm/${_pkgname}"

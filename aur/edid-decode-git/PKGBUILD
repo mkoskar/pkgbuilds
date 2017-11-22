@@ -1,7 +1,7 @@
 # Maintainer: Jonathan Liu <net147@gmail.com>
 pkgname=edid-decode-git
 _gitname=edid-decode
-pkgver=r131.b202b67
+pkgver=r171.f56f329
 pkgrel=1
 pkgdesc="EDID decoder and conformance tester"
 url="http://cgit.freedesktop.org/xorg/app/edid-decode/"
