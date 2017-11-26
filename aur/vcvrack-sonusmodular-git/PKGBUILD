@@ -1,20 +1,20 @@
-# Maintainer: Miroslav Koškár <http://mkoskar.com/>
+# Maintainer: Valerio Orlandini <http://www.sonusdept.com>
 
 _basename='vcvrack'
-_plugname='Befaco'
+_plugname='sonusmodular'
 
-pkgname='vcvrack-befaco-git'
-pkgver=0.4.0.r8.g793bc68
+pkgname='vcvrack-sonusmodular-git'
+pkgver=r290.dd8630b
 pkgrel=1
-pkgdesc="Befaco's VCV modules"
-url='https://github.com/VCVRack/Befaco'
-license=(BSD)
+pkgdesc="Sonus Dept. VCV modules"
+url='https://sonusmodular.sonusdept.com'
+license=(GPL3)
 arch=(i686 x86_64)
 depends=(vcvrack-git)
 makedepends=(git)
 
 source=(
-    "$_basename-$_plugname::git+https://github.com/VCVRack/$_plugname.git"
+    "$_basename-$_plugname::git+https://gitlab.com/sonusdept/$_plugname.git"
     "$_basename::git+https://github.com/VCVRack/Rack.git"
     git+https://github.com/AndrewBelt/osdialog.git
     git+https://github.com/AndrewBelt/oui-blendish.git
@@ -34,7 +34,8 @@ sha256sums=(
 
 pkgver() {
     cd "$_basename-$_plugname"
-    git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+    printf 'r%s.%s' "$(git rev-list --count HEAD)" \
+                    "$(git rev-parse --short HEAD)"
 }
 
 prepare() {

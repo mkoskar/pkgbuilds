@@ -1,14 +1,14 @@
-pkgbase = vcvrack-fundamental-git
-	pkgdesc = Fundamental VCV modules
-	pkgver = 0.4.0.r30.gb6a321a
+pkgbase = vcvrack-sonusmodular-git
+	pkgdesc = Sonus Dept. VCV modules
+	pkgver = r290.dd8630b
 	pkgrel = 1
-	url = https://github.com/VCVRack/Fundamental
+	url = https://sonusmodular.sonusdept.com
 	arch = i686
 	arch = x86_64
-	license = BSD
+	license = GPL3
 	makedepends = git
 	depends = vcvrack-git
-	source = vcvrack-Fundamental::git+https://github.com/VCVRack/Fundamental.git
+	source = vcvrack-sonusmodular::git+https://gitlab.com/sonusdept/sonusmodular.git
 	source = vcvrack::git+https://github.com/VCVRack/Rack.git
 	source = git+https://github.com/AndrewBelt/osdialog.git
 	source = git+https://github.com/AndrewBelt/oui-blendish.git
@@ -23,5 +23,5 @@ pkgbase = vcvrack-fundamental-git
 	sha256sums = SKIP
 	sha256sums = SKIP
 
-pkgname = vcvrack-fundamental-git
+pkgname = vcvrack-sonusmodular-git
 

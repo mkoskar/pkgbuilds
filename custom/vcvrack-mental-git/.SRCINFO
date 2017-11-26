@@ -1,14 +1,14 @@
-pkgbase = vcvrack-fundamental-git
-	pkgdesc = Fundamental VCV modules
-	pkgver = 0.4.0.r30.gb6a321a
+pkgbase = vcvrack-mental-git
+	pkgdesc = Strum's Mental VCV modules
+	pkgver = r75.fff7586
 	pkgrel = 1
-	url = https://github.com/VCVRack/Fundamental
+	url = https://github.com/Strum/Strums_Mental_VCV_Modules
 	arch = i686
 	arch = x86_64
-	license = BSD
+	license = custom
 	makedepends = git
 	depends = vcvrack-git
-	source = vcvrack-Fundamental::git+https://github.com/VCVRack/Fundamental.git
+	source = vcvrack-Mental::git+https://github.com/Strum/Strums_Mental_VCV_Modules.git
 	source = vcvrack::git+https://github.com/VCVRack/Rack.git
 	source = git+https://github.com/AndrewBelt/osdialog.git
 	source = git+https://github.com/AndrewBelt/oui-blendish.git
@@ -23,5 +23,5 @@ pkgbase = vcvrack-fundamental-git
 	sha256sums = SKIP
 	sha256sums = SKIP
 
-pkgname = vcvrack-fundamental-git
+pkgname = vcvrack-mental-git
 

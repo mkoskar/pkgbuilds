@@ -1,20 +1,20 @@
 # Maintainer: Miroslav Koškár <http://mkoskar.com/>
 
 _basename='vcvrack'
-_plugname='Befaco'
+_plugname='Mental'
 
-pkgname='vcvrack-befaco-git'
-pkgver=0.4.0.r8.g793bc68
+pkgname='vcvrack-mental-git'
+pkgver=r75.fff7586
 pkgrel=1
-pkgdesc="Befaco's VCV modules"
-url='https://github.com/VCVRack/Befaco'
-license=(BSD)
+pkgdesc="Strum's Mental VCV modules"
+url='https://github.com/Strum/Strums_Mental_VCV_Modules'
+license=(custom)
 arch=(i686 x86_64)
 depends=(vcvrack-git)
 makedepends=(git)
 
 source=(
-    "$_basename-$_plugname::git+https://github.com/VCVRack/$_plugname.git"
+    "$_basename-$_plugname::git+https://github.com/Strum/Strums_Mental_VCV_Modules.git"
     "$_basename::git+https://github.com/VCVRack/Rack.git"
     git+https://github.com/AndrewBelt/osdialog.git
     git+https://github.com/AndrewBelt/oui-blendish.git
@@ -34,7 +34,8 @@ sha256sums=(
 
 pkgver() {
     cd "$_basename-$_plugname"
-    git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+    printf 'r%s.%s' "$(git rev-list --count HEAD)" \
+                    "$(git rev-parse --short HEAD)"
 }
 
 prepare() {
@@ -58,7 +59,7 @@ build() {
 
 package() {
     cd "$_basename/plugins/$_plugname"
-    install -D -m644 -t "$pkgdir/usr/share/licenses/$_basename/$_plugname" LICENSE*
+    #install -D -m644 -t "$pkgdir/usr/share/licenses/$_basename/$_plugname" LICENSE*
     install -d "$pkgdir/opt/$_basename/plugins/$_plugname"
     cp -dr --preserve=mode -t "$pkgdir/opt/$_basename/plugins/$_plugname" \
         res plugin.so
