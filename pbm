@@ -72,12 +72,12 @@ index() {
         }
         if [[ PKGBUILD -nt .SRCINFO ]]; then
             info "$pkgbase - generating .SRCINFO"
-            tmpfile="$tmpdir/$pkgbase.SRCINFO"
+            tmpfile="$tmpdir/index.SRCINFO.$pkgbase"
             makepkg -m --printsrcinfo 2>&1 >"$tmpfile" |
                 ( grep -v 'Exiting...' || true ) || continue
-            mv "$tmpfile" .SRCINFO
+            cp "$tmpfile" .SRCINFO
         fi
-        tmpfile="$tmpdir/$pkgbase.pkgnames"
+        tmpfile="$tmpdir/index.pkgnames.$pkgbase"
         awk -v FS='\\s*[<>=]\\s*' -v pkgbase="$pkgbase" '
             /^pkgbase =/ {
                 if (pkgbase != $2) {
@@ -104,8 +104,10 @@ index() {
         done
         for pkgname in "${pkgnames[@]}"; do
             pkgname2base[$pkgname]=$pkgbase
+            printf '%s\n' "$pkgname" >>"$tmpdir/index.pkgnames"
         done
         pkgbases[$pkgbase]=1
+        printf '%s\n' "$pkgbase" >>"$tmpdir/index.pkgbases"
     done <"$tmpdir/index.input"
 }
 
@@ -590,18 +592,26 @@ resolve() {
 }
 
 prune() {
-    all >"$tmpdir/all"
-    rm -rf "$statdir.bak"
+    index
+    rm -rf "$logdir"
     if [[ -e $statdir ]]; then
+        rm -rf "$statdir.bak"
         mv "$statdir" "$statdir.bak"
         mkdir -p "$statdir"
-        cd "$statdir.bak"
         while read -r pkgbase; do
-            mv "$pkgbase" "$statdir" &>/dev/null || true
-        done <"$tmpdir/all"
+            mv "$statdir.bak/$pkgbase" "$statdir" &>/dev/null || true
+        done <"$tmpdir/index.pkgbases"
         rm -rf "$statdir.bak"
     fi
-    cd "$repodir" && paccache -r -c "$repodir"
+    cd "$repodir"
+    mkdir -p .prune
+    mv ./*.pkg.tar.xz .prune
+    while read -r pkgname; do
+        mv ".prune/$pkgname"-*.pkg.tar.xz "$repodir" &>/dev/null || true
+    done <"$tmpdir/index.pkgnames"
+    rm -rf .prune
+    cd "$repodir" && paccache -r -c "$repodir" >/dev/null
+    repose -m "$CARCH" -r "$repodir" -p "$repodir" -fz "$dbname"
 }
 
 # ----------------------------------------

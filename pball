@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -eu
+
+(( $# )) || exit 2
+
+#export PBM_QUIET=1
+
+tmpdir=$(mktemp -d)
+cleanup() { rm -rf "$tmpdir"; }
+trap cleanup EXIT
+
+for pbmrc in ~/projects/pub/pkgbuilds/*/.pbmrc; do
+    pbdir=${pbmrc%/*}
+    cd "$pbdir"
+
+    pbm "$@" &>"$tmpdir/out"
+
+    if [[ -s $tmpdir/out ]]; then
+        hasout=1
+        echo $'\n--------------------------------------------------'
+        printf '> %s:\n\n' "$pbdir"
+        cat "$tmpdir/out"
+    fi
+done
+
+[[ ! ${hasout-} ]] || echo

@@ -10,3 +10,8 @@ pargs curl/away http://cdn-fastly.deb.debian.org/debian/pool/main/a/away regex1 
 pargs curl/canon-pixma-mx920-complete 'https://www.canon.co.uk/supportproduct/gettabcontent/?type=drivers&os=Linux%20(64-bit)&productTcmUri=tcm:14-1019656' regex -o2 -o4 '(>MX920 series IJ Printer Driver Ver. ([\d.]+) for Linux \(debian)|(>MX920 series ScanGear MP Ver. ([\d.]+) for Linux \(debian)'
 pargs curl/spring-boot-cli 'https://search.maven.org/solrsearch/select?q=g%3Aorg.springframework.boot%20AND%20a%3Aspring-boot-cli' json '.response.docs[0].latestVersion'
 pargs git-tag/shaman https://github.com/HalosGhost/shaman
+pargs git-tag/vcvrack https://github.com/VCVRack/Rack
+pargs git-tag/vcvrack-audible-instruments https://github.com/VCVRack/AudibleInstruments
+pargs git-tag/vcvrack-befaco https://github.com/VCVRack/Befaco
+pargs git-tag/vcvrack-eseries https://github.com/VCVRack/ESeries
+pargs git-tag/vcvrack-fundamental https://github.com/VCVRack/Fundamental
