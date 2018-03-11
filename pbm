@@ -278,7 +278,7 @@ build() {
     local pacman_conf="$tmpdir/pacman_$CARCH.conf"
     if [[ ! -e $chrootdir/root ]]; then
         pacman_conf "$CARCH" >"$pacman_conf"
-        mkarchroot -C "$pacman_conf" "$chrootdir/root" base-devel git namcap
+        mkarchroot -C "$pacman_conf" "$chrootdir/root" base-devel git
     else
         arch-nspawn -c /var/cache/pacman/pkg "$chrootdir/root" pacman -Syu --noconfirm
     fi
@@ -301,7 +301,7 @@ build() {
             PKGDEST="$repodir" \
             SRCDEST="$srcdir" \
             LOGDEST="$logdir" \
-            makechrootpkg "${binds[@]}" -l "$dbname" -r "$chrootdir" -cun ||
+            makechrootpkg "${binds[@]}" -l "$dbname" -r "$chrootdir" -cu ||
                 printf '%s\n' "$pkgbase" >>"$queue.failed"
         repose -m "$CARCH" -r "$repodir" -p "$repodir" -fz "$dbname"
         cp -a PKGBUILD "$basedir/$pkgbase"

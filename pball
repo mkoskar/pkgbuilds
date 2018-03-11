@@ -20,7 +20,7 @@ for pbmrc in ~/projects/pub/pkgbuilds/*/.pbmrc; do
         hasout=1
         echo $'\n--------------------------------------------------'
         printf '> %s:\n\n' "$pbdir"
-        cat "$tmpdir/out"
+        squashlns <"$tmpdir/out"
     fi
 done
 
