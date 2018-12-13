@@ -63,6 +63,7 @@ declare -a dbdeps=()
 
 index() {
     all >"$tmpdir/index.input"
+    touch "$tmpdir/index.pkgbases" "$tmpdir/index.pkgnames"
     local pkgbase tmpfile pkgnames pkgname
     while read -r pkgbase; do
         cd "$basedir/$pkgbase"
@@ -604,8 +605,9 @@ prune() {
         rm -rf "$statdir.bak"
     fi
     cd "$repodir"
-    mkdir -p .prune
-    mv ./*.pkg.tar.xz .prune
+    rm -rf .prune
+    mkdir .prune
+    mv ./*.pkg.tar.xz .prune &>/dev/null || true
     while read -r pkgname; do
         mv ".prune/$pkgname"-*.pkg.tar.xz "$repodir" &>/dev/null || true
     done <"$tmpdir/index.pkgnames"
