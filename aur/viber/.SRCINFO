@@ -1,0 +1,37 @@
+pkgbase = viber
+	pkgdesc = Proprietary cross-platform IM and VoIP software
+	pkgver = 10.3.0.37
+	pkgrel = 2
+	url = http://viber.com
+	arch = x86_64
+	license = custom
+	depends = libxss
+	depends = xcb-util-image
+	depends = xcb-util-keysyms
+	depends = xcb-util-renderutil
+	depends = xcb-util-wm
+	depends = libxss
+	depends = openssl
+	depends = libpulse
+	depends = alsa-lib
+	depends = nss
+	depends = libxcomposite
+	depends = libxcursor
+	depends = libxdamage
+	depends = libcurl-compat
+	depends = gst-plugins-base
+	depends = gst-plugins-good
+	depends = gst-plugins-ugly
+	depends = gst-libav
+	depends = libxslt
+	depends = openssl-1.0
+	options = !strip
+	source = viber-10.3.0.37.tar.gz::https://download.cdn.viber.com/cdn/desktop/Linux/viber.deb
+	source = eula.html
+	source = viber
+	md5sums = aba85df68ff4960ca27d0310b5a64ca5
+	md5sums = d128190efcd7312829583e682cf46b98
+	md5sums = 51943e698680b19eb85e66f4c3c22adf
+
+pkgname = viber
+

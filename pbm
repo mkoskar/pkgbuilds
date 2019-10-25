@@ -713,7 +713,7 @@ aur_cmd() {
         case $cmd in
             aur-stat)
                 cd "$syncdir/$pid"
-                git branch --all
+                git branch --all -vv
                 echo
                 git status
                 ;;
