@@ -1,5 +1,5 @@
 pkgname=shaman-git
-pkgver=2.0.0.α.r42.g73c048d
+pkgver=2.0.0.alpha.r42.g73c048d
 pkgrel=1
 
 pkgdesc="A small, native C library and utility to fetch weather"
@@ -16,11 +16,12 @@ sha256sums=('SKIP')
 
 pkgver () {
     cd shaman
-    git describe --long | sed -r 's/([^-]*-g)/r\1/; s/-/./g'
+    git describe --long | sed -r 's/([^-]*-g)/r\1/; s/-/./g; s/α/alpha/g'
 }
 
 build () {
     cd shaman
+    tup init
     make simple
 }
 
