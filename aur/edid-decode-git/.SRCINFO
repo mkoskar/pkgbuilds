@@ -1,16 +1,15 @@
 pkgbase = edid-decode-git
 	pkgdesc = EDID decoder and conformance tester
-	pkgver = r430.1889504
+	pkgver = r652.e48fb38
 	pkgrel = 1
 	url = https://git.linuxtv.org/edid-decode.git/
 	arch = i686
 	arch = x86_64
 	license = MIT
 	makedepends = git
-	depends = glibc
+	depends = gcc-libs
 	provides = edid-decode
-	source = git://linuxtv.org/edid-decode.git
+	source = git+https://git.linuxtv.org/edid-decode.git
 	md5sums = SKIP
 
 pkgname = edid-decode-git
-

@@ -15,4 +15,3 @@ pkgbase = libxinerama-randr-git
 	sha256sums = SKIP
 
 pkgname = libxinerama-randr-git
-

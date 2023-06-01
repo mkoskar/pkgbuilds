@@ -1,24 +1,23 @@
 # Maintainer: Daniel Martí <mvdan@mvdan.cc>
 
 pkgname=xurls
-_name="${pkgname}"
-pkgver=2.2.0
+pkgver=2.5.0
 pkgrel=1
 pkgdesc="Extract urls from plain text"
-url="https://github.com/mvdan/${_name}"
-license=('BSD')
-arch=('i686' 'x86_64')
-makedepends=('git' 'go')
-source=("git+${url}#tag=v${pkgver}")
-sha1sums=('SKIP')
+arch=('x86_64')
+url="https://github.com/mvdan/${pkgname}"
+license=('BSD-3-Clause')
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('552779a765de29e51ff01fe6c85a7d0389faae1b80d354332e7c69db232ee4ad')
 
 build() {
-	cd "${srcdir}/${_name}"
-	GO111MODULES=on go build -ldflags='-w -s' ./cmd/${_name}
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	# disable vcs, otherwise -version picks up the git timestamp from the build env
+	CGO_ENABLED=0 go build -buildvcs=false -trimpath -mod=readonly -modcacherw ./cmd/xurls
 }
 
 package() {
-	cd "${srcdir}/${_name}"
-	install -Dm755 "${_name}" "${pkgdir}/usr/bin/${_name}"
-	install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	cd "${srcdir}/${pkgname}-${pkgver}"
+	install -Dm755 -t "${pkgdir}/usr/bin" xurls
 }

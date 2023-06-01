@@ -1,28 +1,27 @@
 # Maintainer: BrainDamage
 pkgname="libsixel"
-pkgrel=2
-pkgver="v1.8.6"
+pkgrel=4
+pkgver="1.10.3"
 pkgdesc="provides a codec for DEC SIXEL graphics, and some converter programs"
 arch=("i686" "x86_64")
-url="https://saitoha.github.io/libsixel/"
+url="https://github.com/libsixel/libsixel"
 license=("MIT")
-depends=("libjpeg-turbo" "libpng" "python" "curl")
-sha256sums=('37611d60c7dbcee701346967336dbf135fdd5041024d5f650d52fae14c731ab9')
-source=("https://github.com/saitoha/libsixel/archive/${pkgver}.tar.gz")
+depends=("libjpeg-turbo" "libpng" "python" "curl" "gdk-pixbuf2" )
+makedepends=("meson")
+sha256sums=('028552eb8f2a37c6effda88ee5e8f6d87b5d9601182ddec784a9728865f821e0')
+source=("https://github.com/libsixel/libsixel/archive/v${pkgver}.tar.gz")
+
 
 build() {
-	cd "${srcdir}/${pkgname}-${pkgver#v}"
-	./configure --prefix=/usr --enable-python --enable-tests
-	make
+	meson --prefix=/usr --buildtype=plain -Dtests=enabled -Dlibcurl=enabled -Dgdk-pixbuf2=enabled "${srcdir}/${pkgname}-${pkgver}" build
+	meson compile -C build
 }
 
 check() {
-	cd "${srcdir}/${pkgname}-${pkgver#v}"
-	make test
+	meson test -C build
 }
 
 package() {
-	cd "${srcdir}/${pkgname}-${pkgver#v}"
-	make DESTDIR="${pkgdir}" install
-	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/libsixel/LICENSE"
+	meson install -C build --destdir "${pkgdir}"
+	install -Dvm 644 "${srcdir}/${pkgname}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

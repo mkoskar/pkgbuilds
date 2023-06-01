@@ -5,7 +5,7 @@
 # Contributor: Özgür Sarıer <ozgursarier1011601115[at]gmail[dot]com>
 
 pkgname=viber
-pkgver=12.0.0.7
+pkgver=20.3.0.1
 pkgrel=1
 pkgdesc="Proprietary cross-platform IM and VoIP software"
 arch=('x86_64')
@@ -13,15 +13,15 @@ url='https://www.viber.com'
 license=('custom')
 depends=('libxss' 'xcb-util-image' 'xcb-util-keysyms' 'xcb-util-renderutil' 'xcb-util-wm' 'libxss'
 	'openssl' 'libpulse' 'alsa-lib' 'nss' 'libxcomposite' 'libxcursor' 'libxdamage'
-	'gst-plugins-base' 'gst-plugins-good' 'gst-plugins-ugly' 'gst-libav' 'libxslt' 'openssl-1.0')
+	'gst-plugins-base' 'gst-plugins-good' 'gst-plugins-ugly' 'gst-plugins-bad' 'gst-libav' 'libxslt' 'openssl-1.1')
 options=('!strip')
 source=("$pkgname-$pkgver.deb::https://download.cdn.viber.com/cdn/desktop/Linux/viber.deb")
-sha256sums=('bfc771fec15dacf4b1cbc6e64b7217c0ea14ce216a5e66f17022de255099d898')
+sha256sums=('60387a6190816ba692d929736633b136d3f01a471f713e5bbbcfd2b2c699080e')
 
 prepare() {
   cd "$srcdir"
 
-  tar -xf control.tar.gz
+  tar -xf control.tar.xz
   tar -Jxf data.tar.xz
   sed -e 's|Exec=/opt/viber/Viber|Exec=viber|g' \
       -e 's|/usr/share/pixmaps/viber.png|viber.png|g' \

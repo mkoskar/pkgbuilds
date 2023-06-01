@@ -1,0 +1,60 @@
+#compdef pbm pball
+
+_arguments -C \
+    ': :->command' \
+    '*:: :->argument' \
+    && return
+
+local _commands=(
+    build
+    list
+    sync
+    resync
+    stat
+    resolve
+    lg
+    lga
+    log
+    loga
+    diff
+    checkout
+    co
+    aur-add
+    aur-stat
+    aur-reset
+    aur-commit
+    aur-push
+    prune
+)
+
+case $state in
+    command)
+        _describe commands _commands
+        ;;
+    argument)
+        case $words[1] in
+            build)
+                _arguments -C \
+                    '-d[include outdated dependencies]'
+                ;;
+            list)
+                _arguments -C \
+                    '-a[all (default)]' \
+                    '-v[VCS (bzr, git, hg, svn, ...)]' \
+                    '-m[AUR maintained]' \
+                    '-d[dependencies]' \
+                    '-i[installed]' \
+                    '-I[not installed]' \
+                    '-o[outdated]'
+                ;;
+            sync | resync | stat | resolve)
+                ;;
+            lg | lga | log | loga | diff | checkout)
+                ;;
+            aur-add | aur-stat | aur-reset | aur-commit | aur-push)
+                ;;
+            prune)
+                ;;
+        esac
+        ;;
+esac

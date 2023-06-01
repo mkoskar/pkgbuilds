@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2094,SC2164
+# shellcheck disable=SC1091,SC2094,SC2164
 
 set -Eu -o pipefail
 shopt -s extglob
@@ -73,12 +73,12 @@ index() {
         }
         if [[ PKGBUILD -nt .SRCINFO ]]; then
             info "$pkgbase - generating .SRCINFO"
-            tmpfile="$tmpdir/index.SRCINFO.$pkgbase"
+            tmpfile=$tmpdir/index.SRCINFO.$pkgbase
             makepkg -m --printsrcinfo 2>&1 >"$tmpfile" |
                 ( grep -v 'Exiting...' || true ) || continue
             cp "$tmpfile" .SRCINFO
         fi
-        tmpfile="$tmpdir/index.pkgnames.$pkgbase"
+        tmpfile=$tmpdir/index.pkgnames.$pkgbase
         awk -v FS='\\s*[<>=]\\s*' -v pkgbase="$pkgbase" '
             /^pkgbase =/ {
                 if (pkgbase != $2) {
@@ -130,7 +130,7 @@ depends() {
     [[ ${_depends_seen[$pkgbase]+set} ]] && return
     [[ ${_depends_in[$pkgbase]+set} ]] || printf '%s\n' "$pkgbase"
     cd "$basedir/$pkgbase"
-    tmpfile="$tmpdir/$pkgbase.depends"
+    tmpfile=$tmpdir/$pkgbase.depends
     awk -v FS='\\s*[<>=]\\s*' -v CARCH="$CARCH" '
         /^pkgbase =/,/^\s*$/ {
             if ($0 ~ "^\t(make|check)?depends(_" CARCH ")? =") print $2
@@ -171,7 +171,7 @@ outdated() {
     while read -r pkgbase; do
         [[ ${pkgbases[$pkgbase]+set} ]] || continue
         cd "$basedir/$pkgbase"
-        tmpfile="$tmpdir/$pkgbase.ver"
+        tmpfile=$tmpdir/$pkgbase.ver
         awk -v FS='\\s*[<>=]\\s*' -v pkgbase="$pkgbase" '
             /^pkgbase =/,/^\s*$/ {
                 if ($0 ~ "^\tpkgver =") pkgver = $2
@@ -201,14 +201,14 @@ pacman_conf() {
     local arch=$1 db repo
     cat <<-EOF
 		[options]
+		HoldPkg = pacman glibc
 		Architecture = $arch
 		Color
-		TotalDownload
 		CheckSpace
 		VerbosePkgLists
+		ParallelDownloads = 5
 		SigLevel = Required DatabaseOptional
 		LocalFileSigLevel = Optional
-		HoldPkg = pacman glibc
 	EOF
     if (( $# > 1 )); then
         for db in "$dbname" "${dbdeps[@]}"; do
@@ -226,8 +226,8 @@ pacman_conf() {
         done
     fi
     case $arch in
-        x86_64) repos=(core extra community multilib) ;;
-        i686) repos=(core extra community) ;;
+        x86_64) repos=(core extra multilib) ;;
+        i686) repos=(core extra) ;;
     esac
     for repo in "${repos[@]}"; do
         printf '[%s]\n' "$repo"
@@ -240,7 +240,7 @@ verifysource() {
     cd "$basedir/$pkgbase"
     export SRCDEST=$srcdir
     export BUILDDIR=$tmpdir.xxx
-    makepkg --verifysource &>"$logdir/$pkgbase-verifysource.log" || {
+    makepkg -f --verifysource &>"$logdir/$pkgbase-verifysource.log" || {
         printf '  -> %s - skipped\n' "$pkgbase" >&2
         printf '%s\n' "$pkgbase" >&3
         return 1
@@ -251,7 +251,7 @@ verifysource() {
 export -f verifysource
 
 build() {
-    local input="$tmpdir/build.input" queue="$logdir/build.queue"
+    local input=$tmpdir/build.input queue=$logdir/build.queue
     local pkgbase dbdep tmpfile
     cat >"$input"
     [[ -s $input ]] || return 0
@@ -276,7 +276,7 @@ build() {
         >"$queue.verified" 3>"$queue.skipped" || true
     echo
     [[ -s $queue.verified ]] || return 0
-    local pacman_conf="$tmpdir/pacman_$CARCH.conf"
+    local pacman_conf=$tmpdir/pacman_$CARCH.conf
     if [[ ! -e $chrootdir/root ]]; then
         pacman_conf "$CARCH" >"$pacman_conf"
         mkarchroot -C "$pacman_conf" "$chrootdir/root" base-devel git
@@ -312,7 +312,7 @@ build() {
         fi
         if [[ PKGBUILD -nt .SRCINFO ]]; then
             info "$pkgbase - generating .SRCINFO"
-            tmpfile="$tmpdir/$pkgbase.SRCINFO"
+            tmpfile=$tmpdir/$pkgbase.SRCINFO
             makepkg -m --printsrcinfo 2>&1 >"$tmpfile" |
                 ( grep -v 'Exiting...' || true ) || continue
             mv "$tmpfile" .SRCINFO
@@ -326,7 +326,7 @@ build() {
 # ----------------------------------------
 
 declare -A alts probes pargs
-readonly ptypes=(packages community aur git-tag curl)
+readonly ptypes=(packages aur git-tag curl)
 
 alts() {
     local pkgbase=$1
@@ -354,7 +354,7 @@ get_probes() {
     local pkgbase=$1 ptype pname pid
     for ptype in "${ptypes[@]}"; do
         for pname in "$pkgbase" ${alts[$pkgbase]-}; do
-            pid="$ptype/$pname"
+            pid=$ptype/$pname
             printf '%s %s\n' "$pid" "${pargs[$pid]-}"
         done
     done
@@ -367,14 +367,14 @@ probe_init() {
     local ptype=$1
     cd "$syncdir"
     case $ptype in
-        packages | community)
+        packages)
             mkdir -p "$ptype"
-            local ofile="$ptype/$ptype.list"
+            local ofile=$ptype/$ptype.list
             declare -i ts_now ts_last_modified=
             ts_now=$(date +%s)
             [[ -e $ofile ]] && ts_last_modified=$(stat -c %Y "$ofile")
             [[ ${RESYNC-} ]] || (( ts_last_modified + 60*60 < ts_now )) || return 0
-            git ls-remote -h --refs "https://git.archlinux.org/svntogit/$ptype.git" |
+            git ls-remote -h --refs "https://github.com/archlinux/svntogit-$ptype.git" |
                 sed -nr '/refs\/heads\/packages/s,^.*\trefs/heads/packages/(.*),\1,p' |
                 sort >"$ofile"
             ;;
@@ -388,7 +388,7 @@ probe_value() {
     local pid=$1 ptype=${1%%/*}
     cd "$syncdir/$pid" &>/dev/null || return 0
     case $ptype in
-        packages | community | aur)
+        packages | aur)
             git rev-parse -q --verify HEAD || true
             ;;
         git-tag | curl)
@@ -402,7 +402,7 @@ probe_sync() {
     shift
     cd "$syncdir"
     case $ptype in
-        packages | community | aur)
+        packages | aur)
             if [[ -e $pid ]]; then
                 cd "$pid"
                 git pull -q --ff-only || {
@@ -413,25 +413,20 @@ probe_sync() {
                 local url branch
                 case $ptype in
                     packages)
-                        url='https://git.archlinux.org/svntogit/packages.git'
-                        branch="packages/$pname"
-                        ;;
-                    community)
-                        url='https://git.archlinux.org/svntogit/community.git'
-                        branch="packages/$pname"
+                        url="https://gitlab.archlinux.org/archlinux/packaging/packages/$pname.git"
                         ;;
                     aur)
                         url="https://aur.archlinux.org/$pname.git"
                         ;;
                 esac
-                if [[ $ptype = 'aur' ]]; then
+                if [[ $ptype = aur ]]; then
                     [[ ${1-} || $(curl -sSL "$url/info/refs") ]] || return 0
                 else
                     grep -Fxq -- "$pname" "$ptype/$ptype.list" || return 0
                 fi
                 # shellcheck disable=SC2086
                 git clone -q ${branch+--single-branch -b "$branch"} "$url" "$pid"
-                if [[ $ptype = 'aur' ]]; then
+                if [[ $ptype = aur ]]; then
                     cd "$pid"
                     [[ ${GIT_NAME-} ]] && git config user.name "$GIT_NAME"
                     [[ ${GIT_EMAIL-} ]] && git config user.email "$GIT_EMAIL"
@@ -483,7 +478,7 @@ sync() {
             info "$pkgbase - no such pkgbase, skipped"
             continue
         }
-        tmpfile="$tmpdir/$pkgbase.probes"
+        tmpfile=$tmpdir/$pkgbase.probes
         get_probes "$pkgbase" >"$tmpfile"
         while read -r pid v; do
             [[ ${queue[$pid]+set} ]] && continue
@@ -511,7 +506,7 @@ stat() {
                     curvals[$k]=$v
                 done <"$statdir/$pkgbase"
             fi
-            tmpfile="$tmpdir/$pkgbase.probes"
+            tmpfile=$tmpdir/$pkgbase.probes
             get_probes "$pkgbase" >"$tmpfile"
             while read -r pid v; do
                 cd "$syncdir/$pid" &>/dev/null || continue
@@ -520,7 +515,7 @@ stat() {
                 newv=$(probe_value "$pid")
                 synced_cnt=$((synced_cnt+1))
                 force=0
-                if [[ $ptype = 'aur' ]]; then
+                if [[ $ptype = aur ]]; then
                     unpushed=0
                     ohead=$(git rev-parse -q --verify origin/master || true)
                     if [[ $ohead ]]; then
@@ -540,7 +535,7 @@ stat() {
                     echo
                 }
                 case $ptype in
-                    packages | community | aur)
+                    packages | aur)
                         if [[ $newv ]]; then
                             printf '    %s : %s commit(s) ahead' "$pid" \
                                 "$(git log --format=oneline ${curv:+"$curv.."} | wc -l)"
@@ -578,7 +573,7 @@ resolve() {
     mkdir -p "$statdir"
     while read -r pkgbase; do
         if [[ -e $basedir/$pkgbase ]]; then
-            tmpfile="$tmpdir/$pkgbase.probes"
+            tmpfile=$tmpdir/$pkgbase.probes
             get_probes "$pkgbase" >"$tmpfile"
             while read -r pid v; do
                 ptype=${pid%%/*}
@@ -624,12 +619,12 @@ probe_cmd() {
     declare -A curvals=()
     if [[ -e $basedir/$pkgbase ]]; then
         cd "$basedir/$pkgbase"
-        tmpfile="$tmpdir/$pkgbase.probes"
+        tmpfile=$tmpdir/$pkgbase.probes
         get_probes "$pkgbase" >"$tmpfile"
         while read -r pid v; do
             ptype=${pid%%/*}
             case $ptype in
-                packages | community | aur) ;;
+                packages | aur) ;;
                 *) continue ;;
             esac
             [[ -e $syncdir/$pid ]] && opts+=("$pid")
@@ -654,8 +649,8 @@ probe_cmd() {
         local curv=${curvals[$pid]-}
         cd "$syncdir/$pid"
         case $ptype in
-            packages | community | aur)
-                [[ $ptype = 'aur' ]] || path='trunk'
+            packages | aur)
+                [[ $ptype = aur ]] || path=trunk
                 case $cmd in
                     lg | lga)
                         local gopts=(--decorate)
@@ -675,9 +670,9 @@ probe_cmd() {
                         ;;
                     diff)
                         cd "$basedir"
-                        local a="$basedir/$pkgbase"
-                        local b="$syncdir/$pid${path:+/$path}"
-                        d -x .git "$a" "$b" || exit
+                        local a=$syncdir/$pid${path:+/$path}
+                        local b=$basedir/$pkgbase
+                        d -x .git -x .gitignore "$a" "$b" || exit
                         ;;
                     checkout | co)
                         [[ ${path-} ]] && cd "$path"
@@ -694,11 +689,11 @@ probe_cmd() {
 
 aur_cmd() {
     local cmd=$1 pkgbase=$2
-    local pid="aur/$pkgbase"
+    local pid=aur/$pkgbase
     shift 2
     if [[ -e $basedir/$pkgbase ]]; then
         cd "$basedir/$pkgbase"
-        if [[ $cmd = 'aur-add' ]]; then
+        if [[ $cmd = aur-add ]]; then
             [[ -e $syncdir/$pid ]] && {
                 info "$pid - already exists"
                 return
@@ -773,13 +768,13 @@ trap cleanup EXIT
 
 dbname=${DBNAME:-${basedir##*/}}
 reposdir=${REPOSDIR:-$HOME/packages}
-repodir="$reposdir/$dbname/$CARCH"
+repodir=$reposdir/$dbname/$CARCH
 cachedir=${CACHEDIR:-$HOME/.cache/pbm}
-chrootdir="${CHROOTSDIR:-$cachedir/chroot}/$CARCH"
-srcdir="$cachedir/src"
-syncdir="$cachedir/sync"
-logdir="$basedir/.log"
-statdir="$basedir/.stat"
+chrootdir=${CHROOTSDIR:-$cachedir/chroot}/$CARCH
+srcdir=$cachedir/src
+syncdir=$cachedir/sync
+logdir=$basedir/.log
+statdir=$basedir/.stat
 export GIT_EMAIL GIT_NAME basedir tmpdir srcdir syncdir logdir
 
 mkdir -p "$repodir" "$chrootdir" "$syncdir"
@@ -802,10 +797,10 @@ case $cmd in
         done
         shift $((OPTIND-1))
         index
-        input="$tmpdir/input"
+        input=$tmpdir/input
         if (( $# )); then
             for arg in "$@"; do
-                if [[ $arg = '-' ]]; then
+                if [[ $arg = - ]]; then
                     cat >>"$input"
                 else
                     printf '%s\n' "$arg" >>"$input"
@@ -827,13 +822,14 @@ case $cmd in
         exit $RETSTAT
         ;;
     list)
+        # shellcheck disable=SC1007
         mode= installed=
         declare -i depends=0 outdated=0
-        while getopts 'avmdiIo' opt; do
+        while getopts avmdiIo opt; do
             case $opt in
-                a) mode='all' ;;
-                v) mode='vcs' ;;
-                m) mode='maintained' ;;
+                a) mode=all ;;
+                v) mode=vcs ;;
+                m) mode=maintained ;;
                 d) depends=1 ;;
                 [iI]) installed=$opt ;;
                 o) outdated=1 ;;
@@ -846,11 +842,11 @@ case $cmd in
             case $mode in
                 all) all ;;
                 vcs) vcs ;;
-                maintained) cower -q -m "$AUR_MAINTAINER" ;;
+                maintained) aur search -m "$AUR_MAINTAINER" --json | jq -r .[].Name ;;
                 *)
                     if (( $# )); then
                         for arg in "$@"; do
-                            if [[ $arg = '-' ]]; then
+                            if [[ $arg = - ]]; then
                                 cat
                             else
                                 printf '%s\n' "$arg"
@@ -886,11 +882,11 @@ case $cmd in
         }
         ;;
     sync | resync | stat | resolve)
-        input="$tmpdir/input"
+        input=$tmpdir/input
         {
             if (( $# )); then
                 for arg in "$@"; do
-                    if [[ $arg = '-' ]]; then
+                    if [[ $arg = - ]]; then
                         cat
                     else
                         printf '%s\n' "$arg"
@@ -905,7 +901,6 @@ case $cmd in
             fi
         } >"$input"
         [[ -s $input ]] || {
-            info 'nothing to do'
             exit 0
         }
         case $cmd in
